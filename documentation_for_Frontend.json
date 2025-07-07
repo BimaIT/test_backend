@@ -1,0 +1,170 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Manajemen Akses API",
+    "version": "1.0.0",
+    "description": "Dokumentasi API untuk fitur Login, Pilih Role, dan Menu Akses"
+  },
+  "paths": {
+    "/api/login": {
+      "post": {
+        "summary": "Login Karyawan",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "username",
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login berhasil",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Login berhasil",
+                  "token": "eyJhbGciOiJIUzI1NiIsInR...",
+                  "user": {
+                    "id": 2,
+                    "nama": "Kaisar",
+                    "roles": [
+                      {
+                        "id": 1,
+                        "name": "Admin"
+                      },
+                      {
+                        "id": 2,
+                        "name": "Ketua DKM"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Username atau password salah"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/login/choose-role": {
+      "post": {
+        "summary": "Pilih Role Jika Ganda",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "type": "string"
+                  },
+                  "roleId": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "token",
+                  "roleId"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Role dipilih",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Role dipilih",
+                  "user": {
+                    "id": 2,
+                    "roleId": 2,
+                    "nama": "Kaisar",
+                    "roleName": "Ketua DKM"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/menu": {
+      "get": {
+        "summary": "Ambil Menu Berdasarkan Role",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "Bearer <jwt_token>"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Menu berhasil diambil",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "data": [
+                    {
+                      "id": 1,
+                      "name": "Dashboard",
+                      "path": "/dashboard",
+                      "parent_id": null,
+                      "children": []
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Role tidak ditemukan"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

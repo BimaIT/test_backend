@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login Page</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .login-box {
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 300px;
+    }
+    .login-box h2 {
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .login-box h3 {
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    .login-box input {
+      width: 100%;
+      padding: 0.6rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    .login-box button {
+      width: 100%;
+      padding: 0.6rem;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .login-box .message {
+      margin-top: 1rem;
+      color: red;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-box">
+    <h2>Login</h2>
+    <h3>Created By <br>Bima Kusuma Jayuspanda</h3>
+    <input type="text" id="username" placeholder="Username" />
+    <input type="password" id="password" placeholder="Password" />
+    <button onclick="login()">Login</button>
+    <p style="text-align: center; margin-top: 1rem;">
+  Belum punya akun? <a href="register.html">Daftar di sini</a>
+</p>
+    <div class="message" id="message"></div>
+  </div>
+
+  <script>
+    async function login() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const message = document.getElementById('message');
+
+      const res = await fetch('http://localhost:5050/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username, password })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        message.style.color = 'green';
+        message.textContent = 'Login berhasil! Token disimpan.';
+        setTimeout(() => {
+        window.location.href = '/dashboard.html';
+},      1000);
+        localStorage.setItem('token', data.token);
+        // redirect or fetch menu, etc...
+      } else {
+        message.style.color = 'red';
+        message.textContent = data.message || 'Login gagal';
+      }
+    }
+  </script>
+</body>
+</html>

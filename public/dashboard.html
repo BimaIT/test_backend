@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      background-color: #f4f4f4;
+    }
+    .menu {
+      background: white;
+      padding: 1rem;
+      border-radius: 10px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    .menu ul { list-style: none; padding-left: 1rem; }
+    .menu li { margin-bottom: 0.5rem; }
+
+    #logout-btn {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+#logout-btn:hover {
+  background-color: #c0392b;
+
+}
+
+.menu ul {
+      list-style: none;
+      padding-left: 1rem;
+      margin: 0;
+    }
+    .menu li {
+      margin: 5px 0;
+      font-family: 'Courier New', monospace;
+    }
+    .toggle {
+      cursor: pointer;
+      display: inline-block;
+      width: 1rem;
+      transition: transform 0.2s ease;
+      font-weight: bold;
+    }
+    .toggle.open {
+      transform: rotate(90deg);
+    }
+    .menu-name {
+      margin-left: 4px;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+    .menu-path {
+      color: #7f8c8d;
+      font-size: 0.85rem;
+      margin-left: 5px;
+    }
+    .submenu {
+      margin-left: 1rem;
+      transition: all 0.2s ease;
+    }
+    .hidden {
+      display: none;
+    }
+
+  </style>
+</head>
+<body>
+  <h2>Menu Akses</h2>
+ <button id="logout-btn" style="float:right; margin-top:-2rem;">Logout</button>
+  <div class="menu" id="menu-container">Memuat menu...</div>
+
+<script>
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = '/login.html';
+    }
+
+    fetch('http://localhost:5050/api/menu', {
+      headers: {
+        'Authorization': 'Bearer ' + token
+      }
+    })
+    .then(res => {
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      return res.json();
+    })
+    .then(result => {
+      const menuContainer = document.getElementById('menu-container');
+
+      if (!result.success || !Array.isArray(result.data)) {
+        throw new Error('Struktur data tidak sesuai');
+      }
+
+      const menus = result.data;
+
+      if (menus.length === 0) {
+        menuContainer.innerHTML = '<p>Tidak ada menu untuk role ini.</p>';
+      } else {
+        menuContainer.innerHTML = renderMenu(menus);
+      }
+    })
+    .catch(err => {
+      console.error('❌ Gagal fetch menu:', err);
+      document.getElementById('menu-container').textContent = 'Gagal memuat menu.';
+    });
+
+    function renderMenu(menus, level = 0) {
+      return `<ul class="menu-level-${level}">` + menus.map(m => {
+        const hasChildren = m.children?.length > 0;
+        const itemId = `menu-${m.id}`;
+        return `
+          <li>
+            ${hasChildren ? `<span class="toggle" data-target="${itemId}">▶</span>` : ''}
+            <span class="menu-name">${m.name}</span>
+            ${m.path ? `<small class="menu-path">(${m.path})</small>` : ''}
+            ${hasChildren ? `<div id="${itemId}" class="submenu hidden">${renderMenu(m.children, level + 1)}</div>` : ''}
+          </li>`;
+      }).join('') + '</ul>';
+    }
+
+    // ✅ Event Delegation: semua toggle klik akan ditangani di satu tempat
+    document.addEventListener('click', function (e) {
+      if (e.target.classList.contains('toggle')) {
+        const id = e.target.dataset.target;
+        const submenu = document.getElementById(id);
+        if (submenu) {
+          submenu.classList.toggle('hidden');
+          e.target.classList.toggle('open');
+        }
+      }
+    });
+  </script>
+
+
+<script>
+  document.getElementById('logout-btn').addEventListener('click', function () {
+    if (confirm('Yakin ingin logout?')) {
+      localStorage.removeItem('token'); // Hapus token
+      window.location.href = '/login.html'; // Redirect ke login
+    }
+  });
+</script>
+
+</body>
+</html>

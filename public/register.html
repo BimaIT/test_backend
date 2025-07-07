@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Daftar Akun</title>
+  <style>
+    body { font-family: Arial; background: #f4f4f4; display: flex; justify-content: center; align-items: center; height: 100vh; }
+    .register-box { background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); width: 300px; }
+    input, select { width: 100%; padding: 0.6rem; margin-bottom: 1rem; border-radius: 5px; border: 1px solid #ccc; }
+    button { width: 100%; padding: 0.6rem; background: #007bff; color: white; border: none; border-radius: 5px; }
+    .message { margin-top: 1rem; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="register-box">
+    <h2>Daftar</h2>
+    <input type="text" id="nama" placeholder="Nama Lengkap" required>
+    <input type="text" id="username" placeholder="Username" required>
+    <input type="password" id="password" placeholder="Password" required>
+    
+    <select id="role" required>
+      <option value="">-- Pilih Role --</option>
+    </select>
+
+    <button onclick="register()">Daftar</button>
+    <div class="message" id="message"></div>
+  </div>
+
+  <script>
+  // Ambil role dari endpoint PUBLIC
+  fetch('http://localhost:5050/api/auth/roles')
+    .then(async res => {
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || `Gagal mengambil role (Status: ${res.status})`);
+      }
+      return res.json();
+    })
+    .then(data => {
+      if (!Array.isArray(data)) {
+        throw new Error('Data roles tidak dalam bentuk array');
+      }
+
+      const roleSelect = document.getElementById('role');
+      data.forEach(role => {
+        const opt = document.createElement('option');
+        opt.value = role.id;
+        opt.textContent = role.name;
+        roleSelect.appendChild(opt);
+      });
+    })
+    .catch(err => {
+      console.error('❌ Gagal fetch roles:', err);
+      const msg = document.getElementById('message');
+      msg.style.color = 'red';
+      msg.textContent = 'Gagal memuat daftar role: ' + err.message;
+    });
+
+  async function register() {
+    const nama = document.getElementById('nama').value.trim();
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value.trim();
+    const roleId = document.getElementById('role').value;
+    const message = document.getElementById('message');
+
+    if (!nama || !username || !password || !roleId) {
+      message.style.color = 'red';
+      message.textContent = 'Semua field wajib diisi dan role harus dipilih';
+      return;
+    }
+
+    try {
+      const res = await fetch('http://localhost:5050/api/admin/register-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username,
+          password,
+          nama,
+          roleIds: [parseInt(roleId)]
+        })
+      });
+
+      const data = await res.json();
+      console.log('✅ Response data:', data);
+      console.log('📦 Status:', res.status);
+
+      if (res.ok) {
+        message.style.color = 'green';
+        message.textContent = 'Berhasil daftar! Silakan login.';
+        setTimeout(() => window.location.href = '/login.html', 2000);
+      } else {
+        message.style.color = 'red';
+        message.textContent = data.message || `Gagal daftar (Status: ${res.status})`;
+      }
+    } catch (err) {
+      console.error('❌ Error saat register:', err);
+      message.style.color = 'red';
+      message.textContent = 'Terjadi kesalahan saat mendaftar: ' + err.message;
+    }
+  }
+</script>
+
+
+</body>
+</html>
